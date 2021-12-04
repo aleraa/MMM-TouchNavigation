@@ -30,9 +30,11 @@ Module.register("MMM-TouchNavigation", {
         text: "Example",
         symbol: "users"
       }
-    }
+    },
+    fadeButtons:false,
+    fadeDelay:15000,
   },
-
+  faded: false,
   // Define required styles.
   getStyles: function() {
     return ["font-awesome.css", this.file('MMM-TouchNavigation.css')];
@@ -55,18 +57,28 @@ Module.register("MMM-TouchNavigation", {
     }[this.config.picturePlacement];
   },
 
+  fadeout: function(self){
+      self.menu.style.opacity=.20;
+      self.faded=true;
+  },
+
   // Override dom generator.
   getDom: function() {
-    var menu = document.createElement("span");
-    menu.className = "navigation-menu";
-    menu.id = this.identifier + "_menu";
-    menu.style.flexDirection = this.config.direction;
+    if(!this.menu){
+      this.menu = document.createElement("span");
 
-    for (var name in this.config.buttons) {
-      menu.appendChild(this.createButton(this, name, this.config.buttons[name]));
+      this.menu.className = "navigation-menu";
+      this.menu.id = this.identifier + "_menu";
+      this.menu.style.flexDirection = this.config.direction;
+      this.menu.style.opacity=1;
+      this.menu.style.transition = "opacity 1.25s"
+      for (var name in this.config.buttons) {
+        this.menu.appendChild(this.createButton(this, name, this.config.buttons[name]));
+      }
+      if(this.config.fadeButtons)
+        this.handle=setTimeout(this.fadeout, this.config.fadeDelay, this)
     }
-
-    return menu;
+    return this.menu;
   },
 
   createButton: function(self, name, data) {
@@ -81,7 +93,21 @@ Module.register("MMM-TouchNavigation", {
       item.className += " current-profile";
     } else {
       item.addEventListener("click", function() {
-        self.sendNotification("CURRENT_PROFILE", name);
+        // if we are using fade out
+        // AND we are faded out, and a button is pushed,
+        if(self.config.fadeButtons && self.faded==true){
+          // fade back in
+          self.menu.style.opacity=1
+          self.faded=false
+          self.handle=setTimeout(self.fadeout, self.config.fadeDelay, self)
+        }
+        else {
+          if(self.handle){
+            clearTimeout(self.handle)
+          }
+          self.handle=setTimeout(self.fadeout, self.config.fadeDelay, self)
+          self.sendNotification("CURRENT_PROFILE", name);
+        }
       });
     }
 
