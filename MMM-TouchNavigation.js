@@ -112,7 +112,7 @@ Module.register("MMM-TouchNavigation", {
     }
 
     if (!self.config.showBorder) {
-      item.style.borderColor = "black";
+      item.style.borderWidth = 0;
     }
 
     if (data.symbol) {
